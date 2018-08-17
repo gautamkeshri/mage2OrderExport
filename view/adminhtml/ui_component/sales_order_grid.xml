@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+ * Copyright © 2015 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<listing xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:noNamespaceSchemaLocation="../../../../Ui/etc/ui_configuration.xsd">
+	<listingToolbar name="listing_top">
+		<!-- add export mass action -->
+		<massaction name="listing_massaction">
+			<action name="export">
+				<argument name="data" xsi:type="array">
+					<item name="config" xsi:type="array">
+                        <item name="confirm" xsi:type="array">
+                            <item name="title" xsi:type="string" translate="true">Export Order</item>
+                            <item name="message" xsi:type="string" translate="true">Export selected orders?</item>
+                        </item>					
+						<item name="type" xsi:type="string">export</item>
+						<item name="label" xsi:type="string" translate="true">Export</item>
+						<item name="url" xsi:type="url" path="orderexport/order/massExport"/>
+					</item>
+				</argument>
+			</action>
+		</massaction>
+	</listingToolbar>	
+</listing>
+
+
+
