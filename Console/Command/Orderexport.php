@@ -12,11 +12,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 class Orderexport extends Command
 {
 
+    private $state;
     const NAME_ARGUMENT = "name";
     const NAME_OPTION = "option";
 	const ENCLOSURE = '"';
     const DELIMITER = ',';
 
+    public function __construct(\Magento\Framework\App\State $state) {
+        $this->state = $state;
+        parent::__construct();
+    }
     
     /**
      * {@inheritdoc}
@@ -25,9 +30,8 @@ class Orderexport extends Command
         InputInterface $input,
         OutputInterface $output
     ) {
+        $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_FRONTEND); 
         $name = $input->getArgument(self::NAME_ARGUMENT);
-		
-		
         $option = $input->getOption(self::NAME_OPTION);
 
         //$output->writeln($option);
@@ -38,36 +42,19 @@ class Orderexport extends Command
             $output->writeln('Please pass one argument.');
         } else {
             try {
+
+                $orderSearchParams = [
+                    'increment_id' => "000000005",
+                    'customer_email' => "roni_cost@example.com"
+                ];
                 $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
-                //$order = $objectManager->create('\Magento\Sales\Model\Order')->load($orderId);
-                //$order = $objectManager->create('\Ndsl\Orderexport\Model\Orderexport')->load($orderId);
-                //$output->writeln($order->getData());
-                print_r($order->getData());
+                $resultPage = $objectManager->create('\Ndsl\Orderexport\Model\Orderexport')->getOrderDataArray($orderSearchParams);
+                echo json_encode($resultPage);die;
+
             } catch (\Exception $e) {
                 $output->writeln($e->getMessage());
             }
         }
-
-        /*
-		//Working Order detail expo code
-		print_r($order->getData());
-		print_r($order->getBillingAddress()->getData());
-		print_r($order->getShippingAddress()->getData());
-		foreach ($order->getAllItems() as $item) {
-			print_r($item->getData());
-        }
-        */
-        /*
-		$customerId = $order->getCustomerId();
-		$customer = $objectManager->create('\Magento\Customer\Model\Customer')->load($customerId);
-		print_r($customer->getData()); 
-		*/
-		
-		//$productId = 1;
-		//$product = $objectManager->create('\Magento\Catalog\Model\Product')->load($productId);
-		//print_r($product->getData());
-        //$output->writeln($order);
-        //$output->writeln("Hello " . $name);
     }
 
     /**
@@ -172,18 +159,5 @@ class Orderexport extends Command
 	
 	protected function writeOrder($order, $fp) 
     {
-		/*
-        $common = $this->getCommonOrderValues($order);
-
-        $orderItems = $order->getItemsCollection();
-        $itemInc = 0;
-        foreach ($orderItems as $item)
-        {
-            if (!$item->isDummy()) {
-                $record = array_merge($common, $this->getOrderItemValues($item, $order, ++$itemInc));
-                fputcsv($fp, $record, self::DELIMITER, self::ENCLOSURE);
-            }
-        }
-		*/
     }
 }
