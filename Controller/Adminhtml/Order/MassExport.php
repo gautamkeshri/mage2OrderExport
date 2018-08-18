@@ -18,7 +18,7 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
 {
   const ENCLOSURE = '"';
   const DELIMITER = ',';
-  
+
   protected $_directoryList;
   public $_resource;
   private $deploymentConfig;
@@ -27,14 +27,14 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
   ResourceConnection $resource,
   Filter $filter, CollectionFactory $collectionFactory,DeploymentConfig $deploymentConfig,DirectoryList $directory_list)
     {
-        
+
     $this->_resource = $resource;
     parent::__construct($context , $filter);
     $this->deploymentConfig = $deploymentConfig;
     $this->collectionFactory = $collectionFactory;
     $this->_directoryList = $directory_list;
 	$this->objectManager = \Magento\Framework\App\ObjectManager::getInstance();
- 
+
   }
     /**
      * Cancel selected orders
@@ -44,32 +44,32 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
      */
     protected function massAction(AbstractCollection $collection)
     {
-		
+
         if (!file_exists($this->_directoryList->getRoot().'/pub/media/orderexport')) {
             mkdir($this->_directoryList->getRoot().'/pub/media/orderexport', 0777, true);
         }
 
         $todayDate = date('Y_m_d_H_i_s', time());
         $fileName = $this->_directoryList->getRoot().'/pub/media/orderexport/orderexport'.$todayDate.'.csv';
-		
-		
+
+
         $fp = fopen($fileName, 'w');
 		$this->writeHeadRow($fp);
-		
+
 		$countOrderExport = 0;
         foreach ($collection->getItems() as $_order) {
 
           $orderId = $_order->getId();
           if ($orderId) {
-			$order = $this->objectManager->create('\Magento\Sales\Model\Order')->load($_order->getId());  
-            $this->writeOrder($order, $fp); 
+			$order = $this->objectManager->create('\Magento\Sales\Model\Order')->load($_order->getId());
+            $this->writeOrder($order, $fp);
             $incId = $order->getIncrementId();
 			$countOrderExport++;
-          } 
+          }
         }
 		fclose($fp);
 
-        $this->downloadCsv($fileName);      
+        $this->downloadCsv($fileName);
         $this->messageManager->addSuccess(__('We Exported %1 order(s).', $countOrderExport));
 
         //$resultRedirect = $this->resultRedirectFactory->create();
@@ -80,7 +80,7 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
 
     public function downloadCsv($file)
     {
-		
+
         if (file_exists($file)) {
             //set appropriate headers
             header('Content-Description: File Transfer');
@@ -94,13 +94,13 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
             readfile($file);
         }
     }
-	
-	protected function writeHeadRow($fp) 
+
+	protected function writeHeadRow($fp)
     {
         fputcsv($fp, $this->getHeadRowValues(), self::DELIMITER, self::ENCLOSURE);
     }
-	
-	protected function getHeadRowValues() 
+
+	protected function getHeadRowValues()
     {
         return array(
             'Order Number',
@@ -160,12 +160,12 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
 			'premium_care'
     	);
     }
-	
-	protected function writeOrder($order, $fp) 
+
+	protected function writeOrder($order, $fp)
     {
         $common = $this->getCommonOrderValues($order);
 
-		
+
         $orderItems = $order->getAllVisibleItems();
         $itemInc = 0;
 		$item = "";
@@ -176,23 +176,23 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
                 fputcsv($fp, $record, self::DELIMITER, self::ENCLOSURE);
           //  }
         }
-		
+
     }
-	
-	protected function getCommonOrderValues($order) 
+
+	protected function getCommonOrderValues($order)
     {
 		$shippingAddress = !$order->getIsVirtual() ? $order->getShippingAddress() : null;
 		$billingAddress = $order->getBillingAddress();
-		
+
 		$payment = $order->getPayment();
 		$method = $payment->getMethodInstance();
 		$methodTitle = $method->getTitle();
 		$total_item_qty = $this->getTotalQtyItemsOrdered($order);
-		
+
 		$priceHelper = $this->objectManager->create('Magento\Framework\Pricing\Helper\Data');
 		$objDate = $this->objectManager->create('Magento\Framework\Stdlib\DateTime\TimezoneInterface');
 		$country_name = $this->objectManager->create('\Magento\Directory\Model\Country');
-        
+
         return array(
             $order->getIncrementId(),
             $objDate->date(new \DateTime($order->getCreatedAt()))->format('m-d-Y'),
@@ -232,10 +232,10 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
             $country_name->load($billingAddress->getData("country_id"))->getName(),
             $billingAddress->getData("telephone")."/".$billingAddress->getData("fax")
         );
-		
+
     }
-	
-	protected function getOrderItemValues($item, $order, $itemInc=1) 
+
+	protected function getOrderItemValues($item, $order, $itemInc=1)
     {
 		$custom_option = "";
 		if($item->hasProductOptions()){
@@ -268,24 +268,24 @@ class MassExport extends \Magento\Sales\Controller\Adminhtml\Order\AbstractMassA
 			$order->getCouponCode(),
 			$order->getBillingAddress()->getData('vat_id')
         );
-		
-		
+
+
     }
-	
-	protected function getTotalQtyItemsOrdered($order) 
+
+	protected function getTotalQtyItemsOrdered($order)
 	{
-		
+
         $qty = 0;
-		
-        $orderedItems = $order->getAllItems();
+
+        $orderedItems = $order->getAllVisibleItems();
         foreach ($orderedItems as $qitem)
         {
             //if (!$item->isDummy()) {
                 $qty += (int)$qitem->getQtyOrdered();
             //}
         }
-		
+
         return $qty;
-		
+
     }
 }
